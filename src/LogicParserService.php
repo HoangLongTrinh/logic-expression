@@ -82,8 +82,8 @@ class LogicParserService
     {
         try {
             $php = $this->convertToPhpCallable($formula);
-            $eval = eval("return {$php};");
-            return $eval instanceof \Closure ? $eval() : $eval;
+            $call = eval("return function() { return {$php}; };");
+            return $call instanceof \Closure ? $call() : $call;
         } catch (\Throwable $e) {
             return [
                 'status' => false,

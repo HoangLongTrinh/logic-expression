@@ -20,8 +20,8 @@ composer require hoanglongtrinh/logic-expression
 
 ```
 use LogicExpression\Logic as L;
-echo L::IF(true, 'yes', 'no'); // yes
-echo L::AND(true, true, false); // false
+echo L::if_excel(true, 'yes', 'no'); // yes
+echo L::and_excel(true, true, false); // false
 
 // helper
 if (!function_exists('logic')) {
@@ -31,6 +31,6 @@ if (!function_exists('logic')) {
     }
 }
 
-logic()::IF(...);
+logic()::ifs_excel(...);
 
 ```

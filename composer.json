@@ -1,0 +1,21 @@
+{
+  "name": "hoanglongtrinh/logic-expression",
+  "description": "Excel-like logical expressions for PHP: IF, IFS, AND, OR, XOR, NOT.",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "LogicExpression\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Trịnh Hoàng Long",
+      "email": "trinhhoanglong01@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.2"
+  },
+  "minimum-stability": "stable"
+}

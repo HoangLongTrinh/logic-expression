@@ -31,6 +31,11 @@ if (!function_exists('parseAllLogicExpressions')) {
                     continue;
                 }
 
+                // ✅ Nếu result là Closure → chạy lấy giá trị
+                if ($result instanceof \Closure) {
+                    $result = $result(); // gọi thực thi
+                }
+
                 $input = substr_replace($input, $result, $offset, strlen($expr));
             }
         }

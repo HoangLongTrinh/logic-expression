@@ -4,12 +4,12 @@ A lightweight PHP library that mimics Excel's logical expressions.
 
 ## Supported functions
 
-- `IF(condition, valueIfTrue, valueIfFalse)`
-- `IFS(condition1, value1, ..., conditionN, valueN)`
-- `AND(...)`
-- `OR(...)`
-- `XOR(...)`
-- `NOT(...)`
+- `if_excel(condition, valueIfTrue, valueIfFalse)`
+- `ifs_excel(condition1, value1, ..., conditionN, valueN)`
+- `and_excel(...)`
+- `or_excel(...)`
+- `xor_excel(...)`
+- `not_excel(...)`
 
 ## Installation
 

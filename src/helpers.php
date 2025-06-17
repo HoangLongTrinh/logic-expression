@@ -21,8 +21,14 @@ if (!function_exists('parseAllLogicExpressions')) {
                 $result = $parser->parse($expr);
 
                 if (is_array($result) && isset($result['status']) && $result['status'] === false) {
-                    // Có lỗi
-                    return json_encode($result);
+                    // 📢 Gửi lỗi lên Slack nếu có hàm slack_msg
+                    if (function_exists('slack_msg')) {
+                        $msg = "[LogicExpression] Error in expression:\n{$expr}\nDetails: {$result['msg']}";
+                        slack_msg($msg, true);
+                    }
+                    // ❗ Thay thế lỗi thành 0
+                    $input = substr_replace($input, '0', $offset, strlen($expr));
+                    continue;
                 }
 
                 $input = substr_replace($input, $result, $offset, strlen($expr));

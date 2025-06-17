@@ -100,6 +100,11 @@ class LogicParserService
         $expr = preg_replace('/\bAND\s*\(/i', 'self::getInstance()->and_excel(', $expr);
         $expr = preg_replace('/\bOR\s*\(/i', 'self::getInstance()->or_excel(', $expr);
         $expr = preg_replace('/\bNOT\s*\(/i', 'self::getInstance()->not_excel(', $expr);
+
+        // Thay toán tử Excel: "<>" → "!="
+        $expr = str_replace('<>', '!=', $expr);
+        // Sửa "=" thành "==" nếu không phải >=, <=, !=, ===, ...
+        $expr = preg_replace('/(?<![<>!=])=(?!=)/', '==', $expr);
         return $expr;
     }
 }

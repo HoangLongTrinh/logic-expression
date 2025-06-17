@@ -21,8 +21,8 @@ if (!function_exists('parseAllLogicExpressions')) {
                 $result = $parser->parse($expr);
 
                 if (is_array($result) && isset($result['status']) && $result['status'] === false) {
-                    // Có lỗi thì  = 0
-                    return 0;
+                    // Có lỗi
+                    return json_encode($result);
                 }
 
                 $input = substr_replace($input, $result, $offset, strlen($expr));

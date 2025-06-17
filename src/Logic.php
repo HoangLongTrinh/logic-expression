@@ -3,110 +3,135 @@ namespace LogicExpression;
 
 class Logic
 {
+    /** @var array */
+    protected $messages = [];
 
-    public static function if_excel($condition = false, $valueTrue = null, $valueFalse = null)
+    /**
+     * @param array $messages
+     */
+    public function __construct($messages = [])
     {
+        $this->messages = $messages;
+    }
+
+    public function if_excel($condition = null, $trueVal = null, $falseVal = null)
+    {
+        if (func_num_args() !== 3) {
+            return $this->error('if_excel', 'Exactly 3 arguments required');
+        }
+
         try {
-            return $condition ? $valueTrue : $valueFalse;
+            $condition = $this->resolve($condition);
+            return $condition ? $this->resolve($trueVal) : $this->resolve($falseVal);
         } catch (\Throwable $e) {
-            self::logError('if_excel', $e);
-            return null;
+            return $this->error('if_excel', $e->getMessage());
         }
     }
 
-    public static function ifs_excel(...$args)
+    public function ifs_excel()
     {
+        $args = func_get_args();
+        if (count($args) < 2 || count($args) % 2 !== 0) {
+            return $this->error('ifs_excel', 'Even number of arguments required (condition/value pairs)');
+        }
+
         try {
-            $args = self::safeIFSArgs($args);
             for ($i = 0; $i < count($args); $i += 2) {
-                if ((bool) ($args[$i] ?? false)) return $args[$i + 1];
+                $cond = $this->resolve($args[$i]);
+                if ($cond) return $this->resolve($args[$i + 1]);
             }
             return null;
         } catch (\Throwable $e) {
-            self::logError('ifs_excel', $e);
-            return null;
+            return $this->error('ifs_excel', $e->getMessage());
         }
     }
 
-    public static function and_excel(...$args): bool
+    public function and_excel()
     {
+        $args = func_get_args();
+        if (count($args) < 1) {
+            return $this->error('and_excel', 'At least 1 argument required');
+        }
+
         try {
-            $args = self::safeArgs($args, [true]);
-            foreach ($args as $cond) {
-                if (!$cond) return false;
+            foreach ($args as $arg) {
+                if (!$this->resolve($arg)) return false;
             }
             return true;
         } catch (\Throwable $e) {
-            self::logError('and_excel', $e);
-            return false;
+            return $this->error('and_excel', $e->getMessage());
         }
     }
 
-    public static function or_excel(...$args): bool
+    public function or_excel()
     {
+        $args = func_get_args();
+        if (count($args) < 1) {
+            return $this->error('or_excel', 'At least 1 argument required');
+        }
+
         try {
-            $args = self::safeArgs($args, [false]);
-            foreach ($args as $cond) {
-                if ($cond) return true;
+            foreach ($args as $arg) {
+                if ($this->resolve($arg)) return true;
             }
             return false;
         } catch (\Throwable $e) {
-            self::logError('or_excel', $e);
-            return false;
+            return $this->error('or_excel', $e->getMessage());
         }
     }
 
-    public static function xor_excel(...$args): bool
+    public function not_excel($arg = null)
+    {
+        if (func_num_args() !== 1) {
+            return $this->error('not_excel', 'Exactly 1 argument required');
+        }
+
+        try {
+            return !$this->resolve($arg);
+        } catch (\Throwable $e) {
+            return $this->error('not_excel', $e->getMessage());
+        }
+    }
+
+    public function parserFromString($formula)
     {
         try {
-            $args = self::safeArgs($args, [false]);
-            $trueCount = 0;
-            foreach ($args as $cond) {
-                if ($cond) $trueCount++;
-            }
-            return $trueCount === 1;
+            $php = $this->convertToPhpCallable($formula);
+            $call = eval("return {$php};");
+            return $call instanceof \Closure ? $call() : $call;
         } catch (\Throwable $e) {
-            self::logError('xor_excel', $e);
-            return false;
+            return $this->error('parserFromString', 'Invalid expression: ' . $e->getMessage());
         }
     }
 
-    public static function not_excel($arg): bool
+    protected function convertToPhpCallable($expr)
     {
-        try {
-            return !$arg;
-        } catch (\Throwable $e) {
-            self::logError('not_excel', $e);
-            return false;
-        }
+        $expr = trim($expr);
+        $expr = preg_replace('/\bIFS\s*\(/i', '$this->ifs_excel(', $expr);
+        $expr = preg_replace('/\bIF\s*\(/i', '$this->if_excel(', $expr);
+        $expr = preg_replace('/\bAND\s*\(/i', '$this->and_excel(', $expr);
+        $expr = preg_replace('/\bOR\s*\(/i', '$this->or_excel(', $expr);
+        $expr = preg_replace('/\bNOT\s*\(/i', '$this->not_excel(', $expr);
+        return $expr;
     }
 
-    protected static function safeArgs(array $args, array $default): array
+    protected function resolve($val)
     {
-        return empty($args) ? $default : $args;
+        return is_callable($val) ? $val() : $val;
     }
 
-    protected static function safeIFSArgs(array $args): array
+    protected function error($method, $msg)
     {
-        $count = count($args);
-        if ($count < 2 || $count % 2 !== 0) {
-            throw new \InvalidArgumentException("ifs_excel() requires even number of arguments.");
-        }
-        return $args;
-    }
-
-    protected static function logError(string $method, \Throwable $e): void
-    {
-        $message = "🚨 *Logic::$method()* Exception:\n"
-            . "`" . $e->getMessage() . "`\n"
-            . "*File:* `" . $e->getFile() . ":" . $e->getLine() . "`";
+        $context = isset($this->messages[strtolower($method)]) ? $this->messages[strtolower($method)] : '';
+        $fullMsg = "[Logic::$method] $msg";
+        if ($context) $fullMsg .= "\nContext: $context";
 
         if (function_exists('slack_msg')) {
-            // Gửi lên Slack qua helper hệ thống nếu có
-            slack_msg($message, true);
+            slack_msg($fullMsg, true);
         } else {
-            // Fallback: gửi thẳng webhook hoặc log file
-            error_log($message);
+            error_log($fullMsg);
         }
+
+        return ['status' => false, 'msg' => $context];
     }
 }

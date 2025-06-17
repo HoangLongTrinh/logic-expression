@@ -1,6 +1,6 @@
 {
   "name": "hoanglongtrinh/logic-expression",
-  "description": "Excel-like logical expressions for PHP: IF, IFS, AND, OR, XOR, NOT.",
+  "description": "Excel-like logic functions for PHP (IF, IFS, AND, OR...) with lazy evaluation & string parser",
   "type": "library",
   "license": "MIT",
   "autoload": {
